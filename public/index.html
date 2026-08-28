@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Algora | DSA AI Instructor</title>
+
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+
+  <!-- Google Fonts: Inter & Fira Code -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;500;600&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+  <!-- Markdown Parser -->
+  <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+
+  <!-- KaTeX (LaTeX Math Rendering) -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css" />
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js"></script>
+
+  <!-- Prism Syntax Highlighting -->
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/themes/prism-tomorrow.min.css" rel="stylesheet" />
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/prism.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-python.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-cpp.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-java.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/prism/1.29.0/components/prism-javascript.min.js"></script>
+
+  <style>
+    body { font-family: 'Inter', sans-serif; }
+    pre, code { font-family: 'Fira Code', monospace !important; }
+    
+    /* Scrollbars */
+    ::-webkit-scrollbar { width: 6px; height: 6px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: #334155; border-radius: 999px; }
+    ::-webkit-scrollbar-thumb:hover { background: #475569; }
+
+    /* Markdown Styles */
+    .prose-dsa h1, .prose-dsa h2, .prose-dsa h3, .prose-dsa h4 {
+      color: #f1f5f9;
+      font-weight: 700;
+      margin-top: 1.25rem;
+      margin-bottom: 0.5rem;
+    }
+    .prose-dsa p { margin-bottom: 0.75rem; line-height: 1.7; }
+    .prose-dsa ul, .prose-dsa ol { margin-left: 1.25rem; margin-bottom: 0.75rem; line-height: 1.6; }
+    .prose-dsa ul { list-style-type: disc; }
+    .prose-dsa ol { list-style-type: decimal; }
+    .prose-dsa hr { border-color: #334155; margin: 1.25rem 0; }
+    .prose-dsa strong { color: #60a5fa; font-weight: 600; }
+    .prose-dsa code:not(pre code) {
+      background: #1e293b;
+      color: #a5b4fc;
+      padding: 0.15rem 0.35rem;
+      border-radius: 0.375rem;
+      font-size: 0.875em;
+    }
+  </style>
+</head>
+<body class="bg-[#0b0f19] text-slate-100 flex flex-col h-screen overflow-hidden antialiased">
+
+  <!-- Navbar -->
+  <header class="h-16 border-b border-slate-800/80 bg-[#0f172a]/70 backdrop-blur-md px-6 flex items-center justify-between shrink-0 z-10">
+    <div class="flex items-center space-x-3">
+      <div class="w-9 h-9 rounded-xl bg-gradient-to-tr from-indigo-600 via-indigo-500 to-cyan-400 flex items-center justify-center text-white font-bold text-sm shadow-lg shadow-indigo-500/25">
+        &lt;/&gt;
+      </div>
+      <div>
+        <h1 class="font-bold text-slate-100 text-sm tracking-tight flex items-center gap-2">
+          Algora
+          <span class="text-[10px] uppercase font-semibold bg-indigo-500/10 text-indigo-400 px-2 py-0.5 rounded-md border border-indigo-500/20">DSA AI</span>
+        </h1>
+        <p class="text-[11px] text-slate-400">Data Structures & Algorithm Coach</p>
+      </div>
+    </div>
+    
+    <div class="flex items-center gap-3">
+      <button id="clearChatBtn" class="text-xs text-slate-400 hover:text-slate-200 transition-colors px-2.5 py-1.5 rounded-lg border border-slate-800 hover:bg-slate-800/60">
+        Clear Chat
+      </button>
+      <span class="inline-flex items-center gap-1.5 px-3 py-1 bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 rounded-full text-xs font-medium">
+        <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
+        Ready
+      </span>
+    </div>
+  </header>
+
+  <!-- Chat History -->
+  <main id="chatBox" class="flex-1 overflow-y-auto px-4 md:px-6 py-6 space-y-6 max-w-4xl w-full mx-auto">
+    <div class="flex items-start gap-3.5">
+      <div class="w-8 h-8 rounded-lg bg-indigo-600/20 border border-indigo-500/30 flex items-center justify-center text-indigo-400 text-xs font-bold shrink-0 mt-0.5 shadow-sm">
+        AI
+      </div>
+      <div class="flex-1 bg-[#131b2e] border border-slate-800/90 rounded-2xl rounded-tl-sm p-5 text-slate-200 text-sm leading-relaxed shadow-sm">
+        <p class="font-medium text-slate-100 mb-1">Hello! I'm Algora, your Data Structures & Algorithms instructor.</p>
+        <p class="text-slate-400">Ask me for concept explanations, complete code solutions, Big-O derivations, or interview problem walkthroughs.</p>
+      </div>
+    </div>
+  </main>
+
+  <!-- Footer / Prompts & Input -->
+  <footer class="p-4 border-t border-slate-800/80 bg-[#0b0f19] shrink-0">
+    <div class="max-w-4xl w-full mx-auto space-y-3">
+      
+      <!-- Suggestion Chips -->
+      <div class="flex items-center gap-2 overflow-x-auto pb-1 no-scrollbar text-xs">
+        <span class="text-slate-500 shrink-0 font-medium">Try:</span>
+        <button class="chip shrink-0 px-3 py-1 bg-slate-900 hover:bg-indigo-600/20 text-slate-300 hover:text-indigo-300 border border-slate-800 hover:border-indigo-500/30 rounded-full transition-colors">
+          Explain QuickSort vs MergeSort
+        </button>
+        <button class="chip shrink-0 px-3 py-1 bg-slate-900 hover:bg-indigo-600/20 text-slate-300 hover:text-indigo-300 border border-slate-800 hover:border-indigo-500/30 rounded-full transition-colors">
+          Two-Pointer vs Sliding Window
+        </button>
+        <button class="chip shrink-0 px-3 py-1 bg-slate-900 hover:bg-indigo-600/20 text-slate-300 hover:text-indigo-300 border border-slate-800 hover:border-indigo-500/30 rounded-full transition-colors">
+          Invert Binary Tree in Python
+        </button>
+        <button class="chip shrink-0 px-3 py-1 bg-slate-900 hover:bg-indigo-600/20 text-slate-300 hover:text-indigo-300 border border-slate-800 hover:border-indigo-500/30 rounded-full transition-colors">
+          Dijkstra's Algorithm Walkthrough
+        </button>
+      </div>
+
+      <!-- Input Bar -->
+      <form id="chatForm" class="relative flex items-end bg-[#131b2e] border border-slate-800 rounded-2xl p-2 shadow-xl focus-within:border-indigo-500/80 focus-within:ring-1 focus-within:ring-indigo-500/50 transition-all">
+        <textarea 
+          id="userInput" 
+          rows="1"
+          placeholder="Ask a DSA question (e.g., Explain dynamic programming on trees)..." 
+          class="w-full max-h-36 bg-transparent text-sm text-slate-100 placeholder-slate-500 pl-3 pr-14 py-2 focus:outline-none resize-none overflow-y-auto leading-relaxed"
+        ></textarea>
+        
+        <button 
+          type="submit" 
+          id="sendBtn"
+          class="absolute right-2.5 bottom-2.5 bg-indigo-600 hover:bg-indigo-500 active:scale-95 text-white p-2.5 rounded-xl transition-all disabled:opacity-40 disabled:hover:bg-indigo-600 shadow-md shadow-indigo-600/20"
+        >
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M6 12L3.269 3.126A59.768 59.768 0 0121.485 12 59.77 59.77 0 013.27 20.874L5.999 12zm0 0h7.5" />
+          </svg>
+        </button>
+      </form>
+    </div>
+  </footer>
+
+  <script src="app.js"></script>
+</body>
+</html>
