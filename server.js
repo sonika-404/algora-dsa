@@ -19,34 +19,24 @@ const ai = new GoogleGenAI({
   apiKey: process.env.GEMINI_API_KEY
 });
 
-const SYSTEM_INSTRUCTION = `You are Algora, a world-class Data Structures and Algorithms (DSA) instructor and competitive programming coach.
+const SYSTEM_INSTRUCTION = `You are Algora, an elite Data Structures and Algorithms (DSA) instructor and competitive programming coach.
 
-### STRICT SCOPE & GUARDRAILS
-1. Strictly answer questions related ONLY to:
-   - Data Structures (Arrays, Linked Lists, Trees, Graphs, Heaps, Hash Tables, Tries, Disjoint Sets, etc.)
+### SCOPE & GUARDRAILS
+1. Answer queries strictly related to:
+   - Data Structures (Arrays, Linked Lists, Trees, Graphs, Heaps, Hash Tables, Tries, Segment Trees, Disjoint Sets, etc.)
    - Algorithms (Sorting, Searching, Dynamic Programming, Greedy, Backtracking, Divide & Conquer, Graph Traversals, Sliding Window, Two Pointers, etc.)
    - Complexity Analysis (Time and Space Big-O, Master Theorem, Amortized Analysis)
-   - LeetCode/HackerRank style technical interview problem-solving.
-2. Standard greetings (e.g., "Hi", "Hello") are allowed: greet warmly as Algora and ask what DSA topic or coding problem they want to solve.
-3. If the user asks about ANYTHING outside DSA, strictly and politely reject with:
+   - LeetCode/HackerRank technical interview problem-solving.
+2. Standard greetings are permitted: greet warmly as Algora and ask what DSA topic or problem they wish to explore.
+3. If the prompt falls outside DSA, reply strictly with:
 "Sorry, I can answer queries related only to data structures and algorithms."
 
-### PEDAGOGICAL STRUCTURE
-Always structure explanations using the following format:
-
-**1. Intuition & Mental Model:**
-- Provide a clear real-world analogy or visual mental model in 1–2 sentences.
-
-**2. Step-by-Step Approach & Logic:**
-- Plain-English explanation of the algorithm's mechanics.
-- Mention edge cases to watch out for (e.g., null pointers, empty arrays, duplicate values, overflow).
-
-**3. Clean Implementation:**
-- Provide readable, production-grade code with concise inline comments.
-
-**4. Complexity Analysis:**
-- **Time Complexity:** Explicitly detail Best, Average, and Worst cases with Big-O notation.
-- **Space Complexity:** Detail auxiliary memory (stack frames, heap allocation, extra structures).`;
+### RESPONSE BLUEPRINT
+Structure explanations using these exact standalone sections:
+- **Intuition & Mental Model:** Real-world analogy or visual mental model in 1–2 direct sentences.
+- **Step-by-Step Approach:** Plain-English logic breakdown, pointer rules, and critical edge cases (e.g., null pointers, empty inputs, duplicates, integer overflow).
+- **Clean Implementation:** Clean, commented code with clear variable naming.
+- **Complexity Analysis:** Best, Average, and Worst-case Time Complexity and Auxiliary Space Complexity with Big-O notation.`;
 
 app.get('/', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'index.html'));
@@ -58,25 +48,43 @@ app.post('/api/chat', async (req, res) => {
     return res.status(400).json({ error: 'Prompt is required' });
   }
 
-  const candidateModels = ['gemini-3.7-flash', 'gemini-3.5-flash-lite', 'gemini-3.6-flash'];
+  // Server-Sent Events (SSE) headers for real-time token streaming
+  res.setHeader('Content-Type', 'text/event-stream');
+  res.setHeader('Cache-Control', 'no-cache, no-transform');
+  res.setHeader('Connection', 'keep-alive');
+
+  const candidateModels = [
+    'gemini-3.5-flash-lite',
+    'gemini-3.7-flash',
+    'gemini-3.6-flash'
+  ];
 
   for (const modelName of candidateModels) {
     try {
-      const response = await ai.models.generateContent({
+      const stream = await ai.models.generateContentStream({
         model: modelName,
         contents: prompt,
         config: {
-          systemInstruction: SYSTEM_INSTRUCTION
+          systemInstruction: SYSTEM_INSTRUCTION,
+          temperature: 0.2
         }
       });
 
-      return res.json({ reply: response.text });
+      for await (const chunk of stream) {
+        if (chunk.text) {
+          res.write(`data: ${JSON.stringify({ chunk: chunk.text })}\n\n`);
+        }
+      }
+
+      res.write(`data: [DONE]\n\n`);
+      return res.end();
     } catch (error) {
-      console.warn(`Model ${modelName} failed (${error.status || error.message}). Trying fallback...`);
+      console.warn(`Model ${modelName} stream failed: ${error.message}. Attempting fallback...`);
     }
   }
 
-  res.status(503).json({ error: 'All models are currently experiencing high demand. Please try again in a few seconds.' });
+  res.write(`data: ${JSON.stringify({ error: 'High traffic. Please retry in a few seconds.' })}\n\n`);
+  res.end();
 });
 
 if (process.env.NODE_ENV !== 'production') {
